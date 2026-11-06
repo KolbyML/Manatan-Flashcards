@@ -28,6 +28,22 @@
   var SVG_H = BLOCK_H - 4; // 109
   var SVG_NS = "http://www.w3.org/2000/svg";
 
+  var mobile = isMobileLayout();
+  var viewportWidth = root.clientWidth;
+  var suppressSwipeClick = false;
+  function isMobileLayout() {
+    return window.innerWidth < 600 || window.matchMedia("(pointer: coarse)").matches;
+  }
+  // Keep the saved desktop mode; phones show a shorter run of the same
+  // month domains, with exactly the same cell size and rendering code.
+  function usesYear() { return !mobile && D.mode === "year"; }
+  function visibleRange() {
+    if (!mobile) return usesYear() ? 1 : 9;
+    // A month occupies at most six week columns. Reserve the weekday band
+    // and use a fixed count per viewport so paging forward/back is stable.
+    return Math.max(1, Math.min(9, Math.floor((root.clientWidth - PITCH + 4) / (6 * PITCH + 4))));
+  }
+
   var THEMES = ["lime", "olive", "ice", "magenta", "flame"];
   var MODES = ["year", "months"];
   var WEEKDAYS = [
@@ -103,24 +119,24 @@
 
   function keyOfDay(day) {
     var c = civilFromDay(day);
-    return D.mode === "year" ? c.y : c.y * 12 + (c.m - 1);
+    return usesYear() ? c.y : c.y * 12 + (c.m - 1);
   }
 
   function keyStartDay(key) {
-    return D.mode === "year"
+    return usesYear()
       ? dayFromCivil(key, 1, 1)
       : dayFromCivil(Math.floor(key / 12), (key % 12) + 1, 1);
   }
 
   function keyEndDay(key) { // inclusive
-    return D.mode === "year"
+    return usesYear()
       ? dayFromCivil(key, 12, 31)
       : keyStartDay(key) +
         daysInMonth(Math.floor(key / 12), (key % 12) + 1) - 1;
   }
 
   function keyLabel(key) {
-    if (D.mode === "year") return String(key);
+    if (usesYear()) return String(key);
     var y = Math.floor(key / 12);
     var m = key % 12;
     return MONTHS[m].slice(0, 3) + " '" + String(y % 100).padStart(2, "0");
@@ -135,7 +151,7 @@
   }
 
   function cellColumn(key, day) {
-    return D.mode === "year"
+    return usesYear()
       ? weekNumberW(day)
       : weekNumberW(day) - weekNumberW(keyStartDay(key));
   }
@@ -154,7 +170,7 @@
   var minDay = D.minDay;
   var dataMaxDay = D.maxDay;
   var maxDay = dataMaxDay;
-  var range = D.mode === "year" ? 1 : 9;
+  var range = visibleRange();
   var initialFirst, first;
   var highlights = [D.today];
   var minReached = false;
@@ -179,16 +195,16 @@
   }
 
   function initWindow() {
-    range = D.mode === "year" ? 1 : 9;
+    range = visibleRange();
     maxDay = dataMaxDay;
-    if (D.mode === "year") {
+    if (usesYear()) {
       initialFirst = keyOfDay(D.today);
     } else {
       // Centered month view: today minus 4 months (clamped to the data
       // start); the upper bound is padded to today plus 6 months so the
       // home button can always return to the centered view.
       var todayKey = keyOfDay(D.today);
-      initialFirst = Math.max(keyOfDay(minDay), todayKey - 4);
+      initialFirst = Math.max(keyOfDay(minDay), todayKey - Math.floor(range / 2));
       var upperStart = keyStartDay(todayKey + 6);
       if (upperStart > maxDay) maxDay = upperStart;
     }
@@ -254,6 +270,9 @@
         x: cellColumn(key, day) * PITCH,
         y: weekdayMon(day) * PITCH,
         "data-day": day,
+        role: "button",
+        tabindex: day === D.today ? 0 : -1,
+        "aria-label": formatLongDate(day) + ". " + (value === null ? "No activity" : Math.abs(value) + (value < 0 ? " cards due" : " reviews")),
       }, g);
     }
     var label = el("text", {
@@ -272,7 +291,7 @@
   function renderStrip(firstKey, extraBefore, extraAfter) {
     var cal = root.querySelector("#rh-cal");
     cal.textContent = "";
-    var dayLabelWidth = D.mode === "months" ? PITCH : 0;
+    var dayLabelWidth = !usesYear() ? PITCH : 0;
 
     var stripFirst = firstKey - extraBefore;
     var keys = [];
@@ -298,7 +317,7 @@
     keys.forEach(function (key) {
       graph.appendChild(renderDomain(key, xs[key]));
     });
-    if (D.mode === "months") {
+    if (!usesYear()) {
       var dayNames = el("g", { "class": "day-name" }, svg);
       var letters = ["M", "T", "W", "T", "F", "S", "S"];
       letters.forEach(function (letter, index) {
@@ -340,9 +359,12 @@
   }
 
   function render() {
+    root.classList.toggle("rh-mobile", mobile);
+    root.setAttribute("data-layout", mobile ? "fragment" : "overview");
     layout = renderStrip(first, 0, 0);
     setGraphShift(layout.originX);
     updateReached();
+    updateToolbar();
     reportHeight();
   }
 
@@ -350,6 +372,12 @@
   // between window offsets so every surviving block shifts equally.
   function slideTo(newFirst) {
     if (animating || newFirst === first) return;
+    hideTooltip();
+    if (mobile || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      first = newFirst;
+      render();
+      return;
+    }
     var oldFirst = first;
     first = newFirst;
     var before = Math.max(0, oldFirst - newFirst);
@@ -378,6 +406,28 @@
     setGraphShift(fromShift);
     requestAnimationFrame(step);
     updateReached();
+  }
+
+  function updateToolbar() {
+    var label = root.querySelector("#rh-period-label");
+    if (!label) return;
+    label.textContent = keyLabel(first) + (range > 1 ? " – " + keyLabel(first + range - 1) : "");
+    root.querySelector("#rh-btn-prev").disabled = minReached;
+    root.querySelector("#rh-btn-next").disabled = maxReached;
+  }
+
+  function updateResponsiveLayout() {
+    var next = isMobileLayout(), width = root.clientWidth;
+    if (next !== mobile || (mobile && width !== viewportWidth)) {
+      mobile = next;
+      viewportWidth = width;
+      hideTooltip();
+      if (root.querySelector("#rh-cal")) {
+        initWindow();
+        render();
+      }
+    }
+    reportHeight();
   }
 
   // ---- tooltip ----
@@ -409,11 +459,23 @@
     }
     tooltip.innerHTML = tooltipHtml(day, value);
     tooltip.style.display = "block";
-    var key = keyOfDay(day);
-    var blockX = layout.xs[key] - currentShift + layout.dayLabelWidth;
-    var x = blockX + 1 + cellColumn(key, day) * PITCH + CELL / 2 -
-      tooltip.offsetWidth / 2;
-    var y = 1 + weekdayMon(day) * PITCH - tooltip.offsetHeight - CELL / 2;
+    // Use the painted cell position, including SVG navigation transforms.
+    // A high z-index cannot escape the embedded browser's viewport.
+    var cell = rect.getBoundingClientRect();
+    var gap = 8;
+    var margin = 4;
+    var width = tooltip.offsetWidth;
+    var height = tooltip.offsetHeight;
+    var center = cell.left + cell.width / 2;
+    var x = Math.max(margin, Math.min(center - width / 2,
+      window.innerWidth - width - margin));
+    var above = cell.top - height - gap;
+    var below = above < margin;
+    var y = below ? cell.bottom + gap : above;
+    y = Math.max(margin, Math.min(y, window.innerHeight - height - margin));
+    tooltip.classList.toggle("ch-tooltip-below", below);
+    tooltip.style.setProperty("--rh-arrow-x",
+      Math.max(10, Math.min(width - 10, center - x)) + "px");
     tooltip.style.left = x + "px";
     tooltip.style.top = y + "px";
   }
@@ -492,7 +554,7 @@
   }
 
   function onHome(event) {
-    if (event.shiftKey) {
+    if (event.shiftKey && !mobile) {
       D.mode = MODES[(MODES.indexOf(D.mode) + 1) % MODES.length];
       D.config.mode = D.mode;
       saveConfig();
@@ -532,20 +594,52 @@
   function reportHeight() {
     bridgeSend({
       type: "resize",
-      height: Math.ceil(root.getBoundingClientRect().height) + 8,
+      // Include the top margin and any preceding dashboard content.
+      height: Math.ceil(root.getBoundingClientRect().bottom + window.scrollY) + 2,
     });
   }
 
   function wire() {
+    root.addEventListener("pointerdown", function (event) {
+      if (!event.target.closest("#rh-cal")) hideTooltip();
+    }, { passive: true });
     var cal = root.querySelector("#rh-cal");
     if (cal) {
+      cal.addEventListener("scroll", hideTooltip, { passive: true });
+      var swipe = null;
+      cal.addEventListener("pointerdown", function (event) {
+        hideTooltip();
+        suppressSwipeClick = false;
+        if (mobile && event.isPrimary && event.pointerType !== "mouse") swipe = { x: event.clientX, y: event.clientY };
+      });
+      cal.addEventListener("pointercancel", function () { swipe = null; });
+      cal.addEventListener("pointerup", function (event) {
+        if (!swipe || !mobile) return;
+        var dx = event.clientX - swipe.x, dy = event.clientY - swipe.y;
+        swipe = null;
+        if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+          suppressSwipeClick = true;
+          onNavigate({ shiftKey: false }, dx > 0 ? "prev" : "next");
+        }
+      });
+      cal.addEventListener("keydown", function (event) {
+        var rect = event.target.closest("[data-day]");
+        if (!rect || (event.key !== "Enter" && event.key !== " ")) return;
+        event.preventDefault();
+        var day = +rect.dataset.day;
+        onCellClick(day, Object.prototype.hasOwnProperty.call(data, day) ? data[day] : null);
+      });
       cal.addEventListener("click", function (event) {
         var rect = event.target.closest ? event.target.closest("rect[data-day]") : null;
         if (!rect) return;
+        if (suppressSwipeClick) { suppressSwipeClick = false; return; }
         var day = +rect.getAttribute("data-day");
-        onCellClick(day, Object.prototype.hasOwnProperty.call(data, day) ? data[day] : null);
+        var value = Object.prototype.hasOwnProperty.call(data, day) ? data[day] : null;
+        if (mobile && !value) showTooltip(rect, day, value);
+        else onCellClick(day, value);
       });
       cal.addEventListener("mouseover", function (event) {
+        if (mobile) return;
         var rect = event.target.closest ? event.target.closest("rect[data-day]") : null;
         if (!rect) return;
         var day = +rect.getAttribute("data-day");
@@ -569,6 +663,11 @@
       noDataOpts.addEventListener("click", openOptions);
     }
   }
+
+  // The native host can attach its bridge after the document first renders.
+  window.addEventListener("manatan-srs-host-ready", reportHeight);
+  window.addEventListener("resize", hideTooltip);
+  new ResizeObserver(updateResponsiveLayout).observe(root);
 
   wire();
   if (root.querySelector("#rh-cal")) {

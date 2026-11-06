@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "review-heatmap",
   "name": "Review Heatmap",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Calendar heatmap of past reviews and upcoming due counts with streak stats, color themes, year and timeline views, navigation, and day-click card browsing.",
   "author": "Kolby Moroz Liebl",
   "license": "MIT",

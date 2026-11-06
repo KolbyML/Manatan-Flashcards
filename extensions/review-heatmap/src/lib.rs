@@ -144,6 +144,14 @@ struct Stats {
 /// average is over active days only; the percentage denominator is the span
 /// since the first recorded review.
 fn compute_stats(history: &BTreeMap<i64, u32>, today: i64) -> Stats {
+    if history.is_empty() {
+        return Stats {
+            streak_max: 0,
+            streak_cur: 0,
+            daily_avg: 0,
+            pct_days_active: 0,
+        };
+    }
     let first_day = *history.keys().next().expect("history is non-empty");
     let last_day = *history.keys().next_back().expect("history is non-empty");
     let total: i64 = history.values().map(|&c| c as i64).sum();
@@ -352,16 +360,15 @@ window.RH_DATA = {data};
         let heatmap_block = if show_heatmap {
             r##"<div class="heatmap">
     <div class="heatmap-controls">
-        <div class="aligncenter">
-            <div title="Go back&#10;(Shift-click for first year)" id="rh-btn-prev" class="hm-btn"><svg viewBox="0 0 32 32"><path d="M22 2 L8 16 L22 30 L26 26 L16 16 L26 6 Z"/></svg></div>
-            <div title="Today" id="rh-btn-home" class="hm-btn"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="9" fill="none" stroke="#8c8c8c" stroke-width="5"/></svg></div>
-            <div title="Go forward&#10;(Shift-click for last year)" id="rh-btn-next" class="hm-btn"><svg viewBox="0 0 32 32"><path d="M10 2 L24 16 L10 30 L6 26 L16 16 L6 6 Z"/></svg></div>
+        <div class="heatmap-navigation" role="group" aria-label="Heatmap period">
+        <button type="button" title="Previous period" aria-label="Previous period" id="rh-btn-prev" class="hm-btn"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M22 2 L8 16 L22 30 L26 26 L16 16 L26 6 Z"/></svg></button>
+        <button type="button" title="Return to today" aria-label="Return to today" id="rh-btn-home" class="hm-btn rh-home"><span id="rh-period-label" aria-live="polite"></span><span class="rh-home-hint">Today</span></button>
+        <button type="button" title="Next period" aria-label="Next period" id="rh-btn-next" class="hm-btn"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M10 2 L24 16 L10 30 L6 26 L16 16 L6 6 Z"/></svg></button>
         </div>
-        <div class="alignright">
-            <div class="hm-btn opts-btn" title="Options" id="rh-btn-opts"><svg viewBox="0 0 32 32"><path d="M16 11 A5 5 0 1 0 16 21 A5 5 0 1 0 16 11 M14 2 L18 2 L19 6.3 L22.2 7.6 L26 5.4 L28.6 8 L26.4 11.8 L27.7 15 L32 16 L32 16 L27.7 17 L26.4 20.2 L28.6 24 L26 26.6 L22.2 24.4 L19 25.7 L18 30 L14 30 L13 25.7 L9.8 24.4 L6 26.6 L3.4 24 L5.6 20.2 L4.3 17 L0 16 L4.3 15 L5.6 11.8 L3.4 8 L6 5.4 L9.8 7.6 L13 6.3 Z" fill-rule="evenodd"/></svg></div>
-        </div>
+        <button type="button" title="Options" aria-label="Heatmap options" id="rh-btn-opts" class="hm-btn opts-btn"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M16 11 A5 5 0 1 0 16 21 A5 5 0 1 0 16 11 M14 2 L18 2 L19 6.3 L22.2 7.6 L26 5.4 L28.6 8 L26.4 11.8 L27.7 15 L32 16 L27.7 17 L26.4 20.2 L28.6 24 L26 26.6 L22.2 24.4 L19 25.7 L18 30 L14 30 L13 25.7 L9.8 24.4 L6 26.6 L3.4 24 L5.6 20.2 L4.3 17 L0 16 L4.3 15 L5.6 11.8 L3.4 8 L6 5.4 L9.8 7.6 L13 6.3 Z" fill-rule="evenodd"/></svg></button>
     </div>
     <div id="rh-cal"></div>
+
 </div>
 "##.to_string()
         } else {
@@ -370,20 +377,16 @@ window.RH_DATA = {data};
 
         let stats_block = if show_stats {
             format!(
-                r#"<div class="streak">
-    <span class="streak-info">Daily average:</span>
-    <span title="Average reviews on active days"
-        class="sstats {class_daily_avg}">{text_daily_avg}</span>
-    <span class="streak-info">Days learned:</span>
-    <span title="Percentage of days with review activity over entire review history"
-        class="sstats {class_pct}">{pct}%</span>
-    <span class="streak-info">Longest streak:</span>
-    <span title="Longest continuous streak of review activity. All types of repetitions included."
-        class="sstats {class_streak_max}">{text_streak_max}</span>
-    <span class="streak-info">Current streak:</span>
-    <span title="Current card review activity streak. All types of repetitions included."
-        class="sstats {class_streak_cur}">{text_streak_cur}</span>
-</div>
+                r#"<dl class="streak">
+    <div class="rh-stat"><dt class="streak-info">Daily average:</dt><dd><span title="Average reviews on active days"
+        class="sstats {class_daily_avg}">{text_daily_avg}</span></dd></div>
+    <div class="rh-stat"><dt class="streak-info">Days learned:</dt><dd><span title="Percentage of days with review activity over entire review history"
+        class="sstats {class_pct}">{pct}%</span></dd></div>
+    <div class="rh-stat"><dt class="streak-info">Longest streak:</dt><dd><span title="Longest continuous streak of review activity. All types of repetitions included."
+        class="sstats {class_streak_max}">{text_streak_max}</span></dd></div>
+    <div class="rh-stat"><dt class="streak-info">Current streak:</dt><dd><span title="Current card review activity streak. All types of repetitions included."
+        class="sstats {class_streak_cur}">{text_streak_cur}</span></dd></div>
+</dl>
 "#,
                 class_daily_avg = level_class(stats.daily_avg, &avg_levels),
                 text_daily_avg = maybe_pluralize(stats.daily_avg, "card"),
@@ -465,7 +468,7 @@ fn options_dialog_html(config: &Config) -> String {
     </select>
 </div>
 <div class="rh-opts-row">
-    <label for="rh-opt-mode" title="Sets the display mode of the calendar">Calendar mode</label>
+    <label for="rh-opt-mode" title="Phones show a shorter fragment of the same heatmap; this selects the desktop overview">Desktop overview</label>
     <select id="rh-opt-mode">
         <option value="year">Yearly Overview</option>
         <option value="months">Continuous Timeline</option>
@@ -545,3 +548,17 @@ impl Extension for ReviewHeatmap {
 }
 
 manatan_flashcards_sdk::export_extension!(ReviewHeatmap);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_collection_has_zero_statistics() {
+        let stats = compute_stats(&BTreeMap::new(), 20_000);
+        assert_eq!(stats.daily_avg, 0);
+        assert_eq!(stats.pct_days_active, 0);
+        assert_eq!(stats.streak_cur, 0);
+        assert_eq!(stats.streak_max, 0);
+    }
+}

@@ -7,69 +7,31 @@
  */
 
 .rh-container {
-    margin-top: 1em;
+    margin-top: 0;
+    padding-top: 4px;
     text-align: center;
 }
 
 .rh-container .heatmap {
     display: inline-block;
+    vertical-align: top;
     position: relative;
-    min-width: 640px;
+    /* Keep controls in the dashboard viewport; only the calendar scrolls. */
+    width: max-content;
+    max-width: 100%;
+    min-width: 0;
 }
 
-/* --- controls row --- */
-
-.rh-container .heatmap-controls {
-    position: relative;
-    height: 16px;
-    margin-bottom: 2px;
+/* Preserve legible cell sizes instead of widening the whole WebView. */
+.rh-container #rh-cal {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
-.rh-container .heatmap-controls .aligncenter {
-    position: absolute;
-    left: 0;
-    right: 0;
-    text-align: center;
-}
-
-.rh-container .heatmap-controls .alignright {
-    position: absolute;
-    right: 0;
-}
-
-.rh-container .hm-btn {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 2px;
-    cursor: pointer;
-    line-height: 10px;
-    vertical-align: middle;
-}
-
-.rh-container .hm-btn svg {
-    width: 10px;
-    height: 10px;
-    fill: #8c8c8c;
-    vertical-align: baseline;
-}
-
-.rh-container .hm-btn:hover {
-    background: #bfbfbf;
-}
-
-.rh-container .hm-btn:active {
-    background: #000;
-}
-
-.night_mode .rh-container .hm-btn:hover,
-.nightMode .rh-container .hm-btn:hover {
-    background: #374f5b;
-}
-
-.night_mode .rh-container .hm-btn:active,
-.nightMode .rh-container .hm-btn:active {
-    background: #433376;
-}
+/* Hover feedback also applies to the semantic navigation buttons below. */
+.rh-container .hm-btn:hover:not(:disabled) { background: var(--rh-card); }
+.rh-container .hm-btn:active:not(:disabled) { background: var(--rh-empty); }
 
 /* --- no-data message --- */
 
@@ -79,6 +41,11 @@
 }
 
 /* --- calendar SVG --- */
+
+.rh-container .cal-heatmap-container {
+    display: block;
+    margin: 0 auto;
+}
 
 .rh-container .cal-heatmap-container .graph {
     shape-rendering: crispedges;
@@ -103,14 +70,11 @@
     shape-rendering: crispedges;
 }
 
-.rh-container .cal-heatmap-container .graph-rect {
-    fill: #eaeaea;
+/* Defaults must not outrank the activity and forecast classes below. */
+.rh-container .graph-rect {
+    fill: var(--rh-empty);
 }
 
-.night_mode .rh-container .cal-heatmap-container .graph-rect,
-.nightMode .rh-container .cal-heatmap-container .graph-rect {
-    fill: #222222;
-}
 
 .rh-container .cal-heatmap-container .graph-subdomain-group rect:hover {
     stroke: #000;
@@ -140,7 +104,8 @@
     font-size: 12px;
     line-height: 1.4;
     width: 140px;
-    position: absolute;
+    position: fixed;
+    max-width: calc(100vw - 8px);
     z-index: 99999;
     text-align: center;
     border-radius: 2px;
@@ -158,8 +123,15 @@
     border-width: 6px 6px 0;
     border-color: #222 transparent transparent transparent;
     bottom: -6px;
-    left: 50%;
+    left: var(--rh-arrow-x, 50%);
     margin-left: -6px;
+}
+
+.rh-container .ch-tooltip-below::after {
+    top: -6px;
+    bottom: auto;
+    border-width: 0 6px 6px;
+    border-color: transparent transparent #222 transparent;
 }
 
 @keyframes rh-fadein {
@@ -168,20 +140,7 @@
     100% { opacity: 0.9; }
 }
 
-/* --- streak stats row --- */
-
-.rh-container .streak {
-    margin-top: 0.5em;
-}
-
-.rh-container .streak-info {
-    margin-left: 1em;
-}
-
-.rh-container .sstats {
-    font-weight: bold;
-    color: #E6E6E6;
-}
+.rh-container .sstats { font-weight: bold; color: var(--rh-foreground); }
 
 /* --- visibility toggles --- */
 
@@ -192,6 +151,74 @@
 .rh-disable-stats .streak {
     display: none;
 }
+
+
+/* One palette drives both the desktop and phone heatmaps. */
+.rh-container {
+    --rh-empty: #eaeaea;
+    --rh-foreground: #202124;
+    --rh-muted: #646b73;
+    --rh-card: rgba(0, 0, 0, 0.045);
+}
+.night_mode .rh-container, .nightMode .rh-container {
+    --rh-empty: #222222;
+    --rh-foreground: #f1f1f3;
+    --rh-muted: #b0b2ba;
+    --rh-card: rgba(255, 255, 255, 0.055);
+}
+.rh-container .heatmap-controls {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Equal space on both sides centers navigation over the chart while
+       keeping settings separate, with an 8px gap between touch targets. */
+    padding: 0 56px;
+    box-sizing: border-box;
+    min-height: 48px;
+    margin-bottom: 0;
+}
+.rh-container .heatmap-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    max-width: 100%;
+}
+.rh-container .opts-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.rh-container .hm-btn {
+    appearance: none;
+    display: inline-flex;
+    min-width: 48px;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: var(--rh-foreground);
+    font: inherit;
+    border-radius: 10px;
+    box-sizing: border-box;
+    padding: 6px;
+}
+.rh-container .hm-btn svg { width: 16px; height: 16px; fill: currentColor; }
+.rh-container .hm-btn:disabled { opacity: 0.3; cursor: default; }
+.rh-container button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.rh-container .rh-home { flex-direction: column; gap: 2px; line-height: 1.3; padding-block: 0; }
+.rh-container #rh-period-label { font-size: 15px; font-weight: 650; }
+.rh-container .rh-home-hint { font-size: 11px; color: var(--rh-muted); }
+.rh-container .streak { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; padding: 0; margin: 4px 0 0; }
+.rh-container .rh-stat { display: inline-flex; align-items: baseline; gap: 4px; }
+.rh-container .rh-stat dt, .rh-container .rh-stat dd { margin: 0; }
+.rh-container .rh-stat .streak-info { margin: 0; }
+/* Same chart and summary on phones; only the visible time range changes. */
+.rh-mobile .heatmap { width: 100%; }
+.rh-mobile #rh-cal { overflow-x: hidden; touch-action: pan-y pinch-zoom; }
 
 /* --- forecast ramp (theme-independent) --- */
 
