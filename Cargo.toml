@@ -1,16 +1,16 @@
 [workspace]
 resolver = "2"
-members = ["crates/manatan-srs-sdk", "extensions/*"]
+members = ["crates/manatan-flashcards-sdk", "extensions/*"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/KolbyML/Manatan-SRS"
+repository = "https://github.com/KolbyML/Manatan-Flashcards"
 authors = ["Kolby Moroz Liebl"]
 
 [workspace.dependencies]
-manatan-srs-sdk = { path = "crates/manatan-srs-sdk" }
+manatan-flashcards-sdk = { path = "crates/manatan-flashcards-sdk" }
 # Pin to the wit-bindgen you build with; the generated binding layout and the
 # `generate!` options can shift between releases.
 wit-bindgen = "0.34"

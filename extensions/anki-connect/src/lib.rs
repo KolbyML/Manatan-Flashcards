@@ -14,7 +14,7 @@
 //! before they reach this code.
 
 use base64::Engine as _;
-use manatan_srs_sdk::{collection, net, store, Extension, HttpRequest, HttpResponse};
+use manatan_flashcards_sdk::{collection, net, store, Extension, HttpRequest, HttpResponse};
 use serde_json::{json, Value};
 
 const API_VERSION: i64 = 6;
@@ -70,7 +70,7 @@ impl Extension for AnkiConnect {
     }
 }
 
-manatan_srs_sdk::export_extension!(AnkiConnect);
+manatan_flashcards_sdk::export_extension!(AnkiConnect);
 
 fn config_value() -> Value {
     serde_json::from_str(&store::config()).unwrap_or_else(|_| json!({}))
@@ -499,7 +499,7 @@ fn id_list(params: &Value, key: &str) -> Result<Vec<u64>, String> {
         .collect())
 }
 
-fn note_fields_json(note: &manatan_srs_sdk::Note) -> Value {
+fn note_fields_json(note: &manatan_flashcards_sdk::Note) -> Value {
     let mut fields = serde_json::Map::new();
     for (order, field) in note.fields.iter().enumerate() {
         fields.insert(

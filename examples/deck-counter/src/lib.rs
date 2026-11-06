@@ -1,4 +1,4 @@
-use manatan_srs_sdk::{collection, Extension};
+use manatan_flashcards_sdk::{collection, Extension};
 
 #[derive(Default)]
 struct DeckCounter;
@@ -14,4 +14,4 @@ impl Extension for DeckCounter {
     }
 }
 
-manatan_srs_sdk::export_extension!(DeckCounter);
+manatan_flashcards_sdk::export_extension!(DeckCounter);

@@ -1,4 +1,4 @@
-// The contract between a Manatan SRS extension (a WebAssembly component, the
+// The contract between a Manatan Flashcards extension (a WebAssembly component, the
 // "guest") and the Manatan host that runs it. This file is the entire public
 // API: it has no dependency on Manatan's closed-source code, and any language
 // that targets the WebAssembly Component Model can implement it.
@@ -424,7 +424,7 @@ interface guest {
     handle-http: func(request: http-request) -> http-response;
 }
 
-/// The world a Manatan SRS extension component targets.
+/// The world a Manatan Flashcards extension component targets.
 world extension {
     import collection;
     import scheduler;

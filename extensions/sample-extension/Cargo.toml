@@ -6,7 +6,7 @@ license.workspace = true
 publish = false
 
 [dependencies]
-manatan-srs-sdk.workspace = true
+manatan-flashcards-sdk.workspace = true
 
 # Extensions build to a WebAssembly module (later componentized). `cdylib` is
 # the crate type the component toolchain consumes.

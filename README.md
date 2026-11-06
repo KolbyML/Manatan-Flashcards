@@ -1,18 +1,24 @@
-# Manatan SRS — Extension SDK
+# Manatan Flashcards — Extension SDK
 
-Public SDK for building [Manatan SRS](https://manatan.com/srs) extensions as
+Public SDK for building [Manatan Flashcards](https://manatan.com/srs) extensions as
 sandboxed **WebAssembly components**.
 
-Manatan SRS is a spaced-repetition app. Build dashboard visualizations, review
+Manatan Flashcards is a spaced-repetition app. Build dashboard visualizations, review
 tools, custom study workflows, and local integrations as self-contained
 WebAssembly packages with explicit permissions.
 
-The [SDK 0.1.0 developer preview](https://crates.io/crates/manatan-srs-sdk/0.1.0)
-is available on crates.io. Use `manatan-srs-sdk = "=0.1.0"` in a standalone
-project, or the local workspace dependency when developing this repository.
+The [SDK 0.1.0 developer preview](https://crates.io/crates/manatan-flashcards-sdk/0.1.0)
+is available on crates.io. Standalone projects can use:
+
+```toml
+manatan-flashcards-sdk = "=0.1.0"
+```
+
+Use the local workspace dependency when developing this repository. The
+extension protocol remains `manatan:srs`, preserving existing host compatibility.
 
 - **Independent of the private host.** This repo defines the entire contract in
-  [`world.wit`](crates/manatan-srs-sdk/wit/world.wit) and a thin Rust SDK over it. Nothing here
+  [`world.wit`](crates/manatan-flashcards-sdk/wit/world.wit) and a thin Rust SDK over it. Nothing here
   depends on Manatan's closed-source host. Anyone can build an extension
   without access to, or changes to, the Manatan app.
 - **Capability-sandboxed.** An extension can only touch what it declares in its
@@ -25,7 +31,7 @@ project, or the local workspace dependency when developing this repository.
 ## Quickstart
 
 ```rust
-use manatan_srs_sdk::{collection, Extension};
+use manatan_flashcards_sdk::{collection, Extension};
 
 #[derive(Default)]
 struct DeckCounter;
@@ -37,7 +43,7 @@ impl Extension for DeckCounter {
     }
 }
 
-manatan_srs_sdk::export_extension!(DeckCounter);
+manatan_flashcards_sdk::export_extension!(DeckCounter);
 ```
 
 Then build it into a component and zip it with a `manifest.json` — see
@@ -74,8 +80,8 @@ custom `{{filter:field}}` template filters.
 ## Layout
 
 ```
-crates/manatan-srs-sdk/wit/       the public contract (included in the crate)
-crates/manatan-srs-sdk/           ergonomic Rust bindings over the WIT
+crates/manatan-flashcards-sdk/wit/       the public contract (included in the crate)
+crates/manatan-flashcards-sdk/           ergonomic Rust bindings over the WIT
 extensions/sample-extension/      a minimal, buildable extension
 extensions/review-heatmap/        contribution-calendar on the dashboard surface
 extensions/reviewer-progress/     a "N reviewed today" badge on the reviewer surface

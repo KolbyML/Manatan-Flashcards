@@ -5,7 +5,7 @@
 //! capability). It touches three host capabilities — `host`, `collection`,
 //! `store` — and nothing else, so its manifest requests only those.
 
-use manatan_srs_sdk::{collection, host, store, Extension};
+use manatan_flashcards_sdk::{collection, host, store, Extension};
 
 #[derive(Default)]
 struct SampleExtension;
@@ -40,4 +40,4 @@ impl Extension for SampleExtension {
     }
 }
 
-manatan_srs_sdk::export_extension!(SampleExtension);
+manatan_flashcards_sdk::export_extension!(SampleExtension);

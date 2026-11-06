@@ -1,11 +1,12 @@
 # Deck Counter
 
-The complete example from [Build your first Manatan SRS extension](https://manatan.com/blog/build-manatan-srs-extensions).
+The complete example from [Build your first Manatan Flashcards extension](https://manatan.com/blog/build-manatan-srs-extensions).
 It displays the number of decks in the active collection on the dashboard.
 It does not change cards or decks, register commands, or contact the network.
 
-This is a standalone Rust project using the published `manatan-srs-sdk` 0.1.0,
-not a path dependency on the SDK source. Copy this directory to start a project.
+This is a standalone Rust project using the published `manatan-flashcards-sdk`
+0.1.0, not a path dependency on the SDK source.
+Copy this directory to start a project.
 Keep `Cargo.lock` with it so subsequent builds use the same dependencies.
 
 ## Build
@@ -27,7 +28,7 @@ are normalized for reproducible packaging with the same toolchain.
 
 ## Install and permissions
 
-Use a disposable collection in a compatible Manatan SRS desktop app:
+Use a disposable collection in a compatible Manatan Flashcards desktop app:
 
 1. Open **Extensions → Install from File** and select the `.mext` file.
 2. Review the consent dialog. The only requested capability is **Read collection**.

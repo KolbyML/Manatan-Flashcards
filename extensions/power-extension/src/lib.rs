@@ -2,7 +2,7 @@
 //! command on load, shows a notification when it's invoked, and auto-buries a
 //! card answered "Easy". Demonstrates that the full capability surface works.
 
-use manatan_srs_sdk::{reviewer, ui, Card, Extension};
+use manatan_flashcards_sdk::{reviewer, ui, Card, Extension};
 
 #[derive(Default)]
 struct PowerExtension;
@@ -31,4 +31,4 @@ impl Extension for PowerExtension {
     }
 }
 
-manatan_srs_sdk::export_extension!(PowerExtension);
+manatan_flashcards_sdk::export_extension!(PowerExtension);

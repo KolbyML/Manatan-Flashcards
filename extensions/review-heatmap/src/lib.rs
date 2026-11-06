@@ -10,7 +10,7 @@
 
 use std::collections::BTreeMap;
 
-use manatan_srs_sdk::{collection, host, store, types::ReviewKind, ui, Extension};
+use manatan_flashcards_sdk::{collection, host, store, types::ReviewKind, ui, Extension};
 use serde_json::{json, Value};
 
 const DAY: i64 = 86_400;
@@ -544,4 +544,4 @@ impl Extension for ReviewHeatmap {
     }
 }
 
-manatan_srs_sdk::export_extension!(ReviewHeatmap);
+manatan_flashcards_sdk::export_extension!(ReviewHeatmap);

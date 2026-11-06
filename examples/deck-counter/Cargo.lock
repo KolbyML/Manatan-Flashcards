@@ -36,7 +36,7 @@ checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 name = "deck-counter"
 version = "0.1.0"
 dependencies = [
- "manatan-srs-sdk",
+ "manatan-flashcards-sdk",
 ]
 
 [[package]]
@@ -103,10 +103,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
-name = "manatan-srs-sdk"
+name = "manatan-flashcards-sdk"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3bdc8aa01a0c99ed5718c1bec274e5cf9857224bd4092800514019b853b3e8e3"
+checksum = "1c6a0aac7fa6dfe9d7f72522caa574b558b824fad20b6e706ac41f0ea124d382"
 dependencies = [
  "wit-bindgen",
 ]

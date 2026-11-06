@@ -1,6 +1,6 @@
-//! # Manatan SRS extension SDK
+//! # Manatan Flashcards extension SDK
 //!
-//! Build [Manatan SRS](https://manatan.com/srs) extensions as sandboxed
+//! Build [Manatan Flashcards](https://manatan.com/srs) extensions as sandboxed
 //! WebAssembly components in Rust. This crate is fully public and has **no
 //! dependency on Manatan's closed-source code** — only [`wit_bindgen`] and the
 //! WIT contract in `wit/world.wit`.
@@ -18,7 +18,7 @@
 //! only those its manifest requests and the user grants.
 //!
 //! ```ignore
-//! use manatan_srs_sdk::{collection, Extension};
+//! use manatan_flashcards_sdk::{collection, Extension};
 //!
 //! #[derive(Default)]
 //! struct DeckCounter;
@@ -28,7 +28,7 @@
 //!         format!("<p>{} decks</p>", collection::list_decks().len())
 //!     }
 //! }
-//! manatan_srs_sdk::export_extension!(DeckCounter);
+//! manatan_flashcards_sdk::export_extension!(DeckCounter);
 //! ```
 
 wit_bindgen::generate!({
@@ -38,7 +38,7 @@ wit_bindgen::generate!({
     export_macro_name: "export_extension_raw",
 });
 
-// Friendly re-exports so extensions write `manatan_srs_sdk::collection::…`.
+// Friendly re-exports so extensions write `manatan_flashcards_sdk::collection::…`.
 pub use crate::manatan::srs::{
     collection, files, host, media, net, reviewer, scheduler, store, tasks, types, ui,
 };
@@ -58,7 +58,7 @@ pub use crate::exports::manatan::srs::guest::Guest as __Guest;
 use core::any::Any;
 use core::cell::RefCell;
 
-/// A Manatan SRS extension.
+/// A Manatan Flashcards extension.
 ///
 /// Implement only the hooks you need — all have no-op defaults — then register
 /// your type with [`export_extension!`]. Instance state lives in `self`; use

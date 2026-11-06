@@ -3,7 +3,7 @@
 //! registers a Tools-menu command, and schedules a one-shot timer. A
 //! demonstration of hooks for review alarms, streak trackers, and auto-taggers.
 
-use manatan_srs_sdk::{reviewer, store, tasks, ui, Card, Extension};
+use manatan_flashcards_sdk::{reviewer, store, tasks, ui, Card, Extension};
 use serde_json::{json, Value};
 
 #[derive(Default)]
@@ -105,4 +105,4 @@ impl Extension for EventLogger {
     }
 }
 
-manatan_srs_sdk::export_extension!(EventLogger);
+manatan_flashcards_sdk::export_extension!(EventLogger);

@@ -1,7 +1,7 @@
-# Manatan SRS extension capabilities
+# Manatan Flashcards extension capabilities
 
 Extensions use host-mediated interfaces defined in
-[`world.wit`](../crates/manatan-srs-sdk/wit/world.wit). Request only the
+[`world.wit`](../crates/manatan-flashcards-sdk/wit/world.wit). Request only the
 permissions your feature needs. A declared interface is an API contract, not
 a guarantee that every host platform implements every underlying action.
 

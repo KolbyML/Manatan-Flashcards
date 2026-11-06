@@ -1,6 +1,6 @@
 [package]
-name = "manatan-srs-sdk"
-description = "Public SDK for building Manatan SRS extensions as WebAssembly components."
+name = "manatan-flashcards-sdk"
+description = "Public SDK for building Manatan Flashcards extensions as WebAssembly components."
 version.workspace = true
 edition.workspace = true
 license.workspace = true

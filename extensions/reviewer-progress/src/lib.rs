@@ -2,7 +2,7 @@
 //! on the card page. Demonstrates rendering into the reviewer surface from the
 //! generic `collection.review-log` capability.
 
-use manatan_srs_sdk::{collection, host, Extension};
+use manatan_flashcards_sdk::{collection, host, Extension};
 
 #[derive(Default)]
 struct ReviewerProgress;
@@ -22,4 +22,4 @@ impl Extension for ReviewerProgress {
     }
 }
 
-manatan_srs_sdk::export_extension!(ReviewerProgress);
+manatan_flashcards_sdk::export_extension!(ReviewerProgress);

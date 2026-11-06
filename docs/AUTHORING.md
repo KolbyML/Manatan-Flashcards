@@ -1,9 +1,9 @@
-# Authoring a Manatan SRS extension
+# Authoring a Manatan Flashcards extension
 
 An extension is a WebAssembly **component** (a `.wasm` targeting the
-[`extension` world](../crates/manatan-srs-sdk/wit/world.wit)) plus a `manifest.json`, zipped together
+[`extension` world](../crates/manatan-flashcards-sdk/wit/world.wit)) plus a `manifest.json`, zipped together
 into a `.mext` file. This guide covers writing, building, and packaging one in
-Rust with [`manatan-srs-sdk`](../crates/manatan-srs-sdk).
+Rust with [`manatan-flashcards-sdk`](../crates/manatan-flashcards-sdk).
 
 ## 1. Toolchain
 
@@ -20,13 +20,13 @@ etc. instead of `std` I/O.
 ## 2. Write the extension
 
 Start from the standalone [`examples/deck-counter`](../examples/deck-counter)
-project to use the published SDK: `manatan-srs-sdk = "=0.1.0"`. Its README
+project to use the published SDK: `manatan-flashcards-sdk = "=0.1.0"`. Its README
 includes a packaging command and an install/permissions/lifecycle checklist.
 For development inside this repository, `extensions/sample-extension` uses
 `cdylib` and the workspace's local SDK dependency instead.
 
 ```rust
-use manatan_srs_sdk::{collection, host, store, Extension};
+use manatan_flashcards_sdk::{collection, host, store, Extension};
 
 #[derive(Default)]
 struct MyExtension;
@@ -43,7 +43,7 @@ impl Extension for MyExtension {
     }
 }
 
-manatan_srs_sdk::export_extension!(MyExtension);
+manatan_flashcards_sdk::export_extension!(MyExtension);
 ```
 
 Every [`Extension`] hook has a default, so implement only what you need:
@@ -141,12 +141,12 @@ Request the minimum you need — users see the list before installing.
 zip my-extension.mext manifest.json my-extension.wasm
 ```
 
-Install it from the Manatan SRS app: **Extensions → Install from File**, or
+Install it from the Manatan Flashcards app: **Extensions → Install from File**, or
 publish it to the shared gallery and install via **Get Shared**. Either way
 the app shows the manifest's requested permissions in a consent dialog before
 anything is installed, so request the minimum you need.
 
-Test in a compatible Manatan SRS host with a disposable collection before
+Test in a compatible Manatan Flashcards host with a disposable collection before
 sharing. A valid component is not proof that every host platform supports
 every capability; local HTTP listeners, native file pickers, and system media
 features need platform-specific testing.
