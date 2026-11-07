@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh Manatan extension metadata daily
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=1h
+Persistent=true
+Unit=manatan-extension-metadata.service
+
+[Install]
+WantedBy=timers.target

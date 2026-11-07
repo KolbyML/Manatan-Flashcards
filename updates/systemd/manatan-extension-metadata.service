@@ -1,0 +1,15 @@
+[Unit]
+Description=Refresh signed Manatan extension metadata
+
+[Service]
+Type=oneshot
+User=manatan-publisher
+Group=manatan-publisher
+ExecStart=/opt/manatan-extension-publisher/bin/python /opt/manatan-flashcards/scripts/extension-repository.py publish --keys /etc/manatan/extension-online-keys --out /var/lib/manatan-extension-updates
+UMask=0022
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/manatan-extension-updates
+TimeoutStartSec=120

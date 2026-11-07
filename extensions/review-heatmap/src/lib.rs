@@ -144,15 +144,14 @@ struct Stats {
 /// average is over active days only; the percentage denominator is the span
 /// since the first recorded review.
 fn compute_stats(history: &BTreeMap<i64, u32>, today: i64) -> Stats {
-    if history.is_empty() {
+    let Some(&first_day) = history.keys().next() else {
         return Stats {
             streak_max: 0,
             streak_cur: 0,
             daily_avg: 0,
             pct_days_active: 0,
         };
-    }
-    let first_day = *history.keys().next().expect("history is non-empty");
+    };
     let last_day = *history.keys().next_back().expect("history is non-empty");
     let total: i64 = history.values().map(|&c| c as i64).sum();
 
@@ -203,9 +202,9 @@ fn level_class(value: i64, levels: &[(f64, &'static str)]) -> &'static str {
     selected
 }
 
-/// "1 day" / "2 days" — pluralize only for |count| > 1.
+/// "0 days" / "1 day" / "2 days".
 fn maybe_pluralize(count: i64, term: &str) -> String {
-    let suffix = if count.abs() > 1 { "s" } else { "" };
+    let suffix = if count.abs() != 1 { "s" } else { "" };
     format!("{count} {term}{suffix}")
 }
 
@@ -269,30 +268,6 @@ impl ReviewHeatmap {
         }
 
         let css = include_str!("web/heatmap.css");
-        if history.is_empty() {
-            // Without review history, show an empty state with an options link.
-            return format!(
-                r#"<div id="review-heatmap-root" class="rh-container rh-theme-{colors} rh-mode-{mode} rh-view-{view}">
-<style>{css}</style>
-No activity data to show (<span class="linkspan" id="rh-nodata-opts">options</span>).
-</div>
-<script>
-window.RH_DATA = {data};
-{js}
-</script>
-"#,
-                colors = config.colors,
-                mode = config.mode,
-                data = json_for_script(&json!({
-                    "days": {}, "today": today, "offset": offset,
-                    "minDay": today, "maxDay": today,
-                    "legend": [], "mode": config.mode, "theme": config.colors,
-                    "view": view, "config": config.as_json(),
-                })),
-                js = include_str!("web/heatmap.js"),
-            );
-        }
-
         // Future due counts as negative values, so the same legend colors
         // them with the grey ramp. Offset 0 = today; when today was already
         // studied the positive review count wins.
@@ -317,7 +292,7 @@ window.RH_DATA = {data};
         // remaining-due count.
 
         let stats = compute_stats(&history, today);
-        let min_day = *history.keys().next().expect("non-empty");
+        let min_day = history.keys().next().copied().unwrap_or(today);
 
         let avg_for_legend = (stats.daily_avg.max(20)) as f64;
         let legend: Vec<f64> = DYNAMIC_LEGEND_FACTORS
@@ -335,8 +310,8 @@ window.RH_DATA = {data};
         let avg_levels: Vec<(f64, &str)> = std::iter::once(0.0)
             .chain(legend.iter().copied())
             .zip([
-                "rh-col0", "rh-col11", "rh-col12", "rh-col13", "rh-col14",
-                "rh-col15", "rh-col16", "rh-col17", "rh-col18", "rh-col19",
+                "rh-col0", "rh-col11", "rh-col12", "rh-col13", "rh-col14", "rh-col15", "rh-col16",
+                "rh-col17", "rh-col18", "rh-col19",
             ])
             .collect();
 
@@ -554,7 +529,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_collection_has_zero_statistics() {
+    fn no_reviews_has_zero_statistics() {
         let stats = compute_stats(&BTreeMap::new(), 20_000);
         assert_eq!(stats.daily_avg, 0);
         assert_eq!(stats.pct_days_active, 0);
