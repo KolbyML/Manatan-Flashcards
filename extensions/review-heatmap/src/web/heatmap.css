@@ -10,6 +10,7 @@
     margin-top: 0;
     padding-top: 4px;
     text-align: center;
+    color: var(--rh-foreground);
 }
 
 .rh-container .heatmap {
@@ -52,13 +53,13 @@
 }
 
 .rh-container .cal-heatmap-container .graph-label {
-    fill: #808080;
+    fill: var(--rh-muted);
     font-size: 10px;
 }
 
 .rh-container .cal-heatmap-container .day-name-text {
     font-size: 10px;
-    fill: #999;
+    fill: var(--rh-muted);
 }
 
 .rh-container .cal-heatmap-container .day-name-rect {
@@ -77,17 +78,17 @@
 
 
 .rh-container .cal-heatmap-container .graph-subdomain-group rect:hover {
-    stroke: #000;
+    stroke: var(--rh-foreground);
     stroke-width: 1px;
 }
 
 .rh-container .cal-heatmap-container rect.highlight {
-    stroke: #E9002E;
+    stroke: var(--manatan-error, #E9002E);
     stroke-width: 1px;
 }
 
 .rh-container .cal-heatmap-container rect.highlight-now {
-    stroke: black;
+    stroke: var(--rh-foreground);
     stroke-width: 1px;
 }
 
@@ -99,8 +100,8 @@
 
 .rh-container .ch-tooltip {
     padding: 10px;
-    background: #222;
-    color: rgb(240, 240, 240);
+    background: var(--manatan-surface, #222);
+    color: var(--manatan-foreground, rgb(240, 240, 240));
     font-size: 12px;
     line-height: 1.4;
     width: 140px;
@@ -121,7 +122,7 @@
     position: absolute;
     border-style: solid;
     border-width: 6px 6px 0;
-    border-color: #222 transparent transparent transparent;
+    border-color: var(--manatan-surface, #222) transparent transparent transparent;
     bottom: -6px;
     left: var(--rh-arrow-x, 50%);
     margin-left: -6px;
@@ -131,7 +132,7 @@
     top: -6px;
     bottom: auto;
     border-width: 0 6px 6px;
-    border-color: transparent transparent #222 transparent;
+    border-color: transparent transparent var(--manatan-surface, #222) transparent;
 }
 
 @keyframes rh-fadein {
@@ -155,16 +156,25 @@
 
 /* One palette drives both the desktop and phone heatmaps. */
 .rh-container {
-    --rh-empty: #eaeaea;
-    --rh-foreground: #202124;
-    --rh-muted: #646b73;
-    --rh-card: rgba(0, 0, 0, 0.045);
+    --rh-empty: var(--manatan-surface, #eaeaea);
+    --rh-foreground: var(--manatan-foreground, #202124);
+    --rh-muted: var(--manatan-muted, #646b73);
+    --rh-card: var(--manatan-surface, rgba(0, 0, 0, 0.045));
 }
 .night_mode .rh-container, .nightMode .rh-container {
-    --rh-empty: #222222;
-    --rh-foreground: #f1f1f3;
-    --rh-muted: #b0b2ba;
-    --rh-card: rgba(255, 255, 255, 0.055);
+    --rh-empty: var(--manatan-surface, #222222);
+    --rh-foreground: var(--manatan-foreground, #f1f1f3);
+    --rh-muted: var(--manatan-muted, #b0b2ba);
+    --rh-card: var(--manatan-surface, rgba(255, 255, 255, 0.055));
+}
+/* Keep empty days visible when Pure Black makes surfaces black. */
+@supports (fill: color-mix(in srgb, black, white)) {
+    .rh-container {
+        --rh-empty: color-mix(in srgb, var(--rh-foreground) 10%, var(--manatan-surface, #eaeaea));
+    }
+    .night_mode .rh-container, .nightMode .rh-container {
+        --rh-empty: color-mix(in srgb, var(--rh-foreground) 10%, var(--manatan-surface, #222222));
+    }
 }
 .rh-container .heatmap-controls {
     position: relative;

@@ -26,7 +26,6 @@
   }
 
   function fill(values) {
-    byId("rh-opt-colors").value = values.colors || "lime";
     byId("rh-opt-mode").value = values.mode || "year";
     byId("rh-opt-limhist").value = values.limhist || 0;
     byId("rh-opt-limfcst").value = values.limfcst || 0;
@@ -52,7 +51,8 @@
       limdateMs = new Date(+parts[0], +parts[1] - 1, +parts[2]).getTime();
     }
     return {
-      colors: byId("rh-opt-colors").value,
+      // Keep existing collections compatible while the app owns appearance.
+      colors: config.colors || "lime",
       mode: byId("rh-opt-mode").value,
       limhist: Math.max(0, parseInt(byId("rh-opt-limhist").value, 10) || 0),
       limfcst: Math.max(0, parseInt(byId("rh-opt-limfcst").value, 10) || 0),
@@ -67,7 +67,6 @@
 
   byId("rh-opt-defaults").addEventListener("click", function () {
     fill({
-      colors: "lime",
       mode: "year",
       limhist: 0,
       limfcst: 0,

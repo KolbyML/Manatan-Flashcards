@@ -388,7 +388,8 @@ impl ReviewHeatmap {
         }
 
         format!(
-            r#"<div id="review-heatmap-root" class="{container_classes}">
+            r#"<script>{theme_js}</script>
+<div id="review-heatmap-root" class="{container_classes}">
 <style>{css}</style>
 {heatmap_block}{stats_block}</div>
 <script>
@@ -396,6 +397,7 @@ window.RH_DATA = {data};
 {js}
 </script>
 "#,
+            theme_js = include_str!("web/theme.js"),
             js = include_str!("web/heatmap.js"),
         )
     }
@@ -413,35 +415,33 @@ fn json_for_script(value: &Value) -> String {
 /// `on-message`.
 fn options_dialog_html(config: &Config) -> String {
     let css = r#"
-.rh-opts { padding: 14px 16px 10px; }
+.rh-opts { padding: 14px 16px 10px; color: var(--manatan-foreground, inherit); }
 .rh-opts-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .rh-opts-row > label:first-child { flex: 1; }
 .rh-opts select, .rh-opts input[type="number"], .rh-opts input[type="date"] {
     font: inherit; padding: 2px 4px; }
 .rh-opts input[type="number"] { width: 70px; }
-.rh-opts .rh-opts-hint { color: #888; font-size: 11px; }
-.rh-opts fieldset { border: 1px solid #bbb; border-radius: 3px;
+.rh-opts .rh-opts-hint { color: var(--manatan-muted, #888); font-size: 11px; }
+.rh-opts fieldset { border: 1px solid var(--manatan-border, #bbb); border-radius: 3px;
     margin: 0 0 10px; padding: 4px 10px 8px; }
 .rh-opts fieldset label { display: block; margin-top: 4px; }
 .rh-opts .rh-opts-check { display: block; margin: 0 0 10px; }
 .rh-opts .rh-opts-buttons { display: flex; gap: 8px; margin-top: 14px; }
 .rh-opts .rh-opts-buttons .rh-spacer { flex: 1; }
 .rh-opts button { font: inherit; padding: 4px 14px; }
-.night_mode .rh-opts fieldset, .nightMode .rh-opts fieldset { border-color: #555; }
+.rh-opts select, .rh-opts input, .rh-opts button {
+    color: var(--manatan-foreground, CanvasText);
+    background-color: var(--manatan-surface, Canvas);
+    border-color: var(--manatan-border, ButtonBorder);
+    accent-color: var(--manatan-primary, auto);
+}
+
+.night_mode .rh-opts fieldset, .nightMode .rh-opts fieldset { border-color: var(--manatan-border, #555); }
 "#;
     format!(
-        r#"<div class="rh-opts">
+        r#"<script>{theme_js}</script>
+<div class="rh-opts">
 <style>{css}</style>
-<div class="rh-opts-row">
-    <label for="rh-opt-colors" title="Sets the general color scheme of the heatmap">Color scheme</label>
-    <select id="rh-opt-colors">
-        <option value="lime">Lime</option>
-        <option value="olive">Olive</option>
-        <option value="ice">Ice</option>
-        <option value="magenta">Magenta</option>
-        <option value="flame">Flame</option>
-    </select>
-</div>
 <div class="rh-opts-row">
     <label for="rh-opt-mode" title="Phones show a shorter fragment of the same heatmap; this selects the desktop overview">Desktop overview</label>
     <select id="rh-opt-mode">
@@ -482,6 +482,7 @@ window.RH_OPTS = {config_json};
 </script>
 "#,
         config_json = json_for_script(&config.as_json()),
+        theme_js = include_str!("web/theme.js"),
         options_js = include_str!("web/options.js"),
     )
 }
