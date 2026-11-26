@@ -63,3 +63,36 @@ publication must run as this same publisher. The CLI takes a repository file
 lock so a release publication and scheduled refresh cannot race their metadata
 counters or temporary files. Keep the repository on a local filesystem that
 supports POSIX file locks.
+
+## GitHub Actions
+
+A push to `master` runs **Flashcards extensions**, which tests the workspace
+and uploads all three validated `.mext` files as a workflow artifact. To
+publish, run the workflow from `master` manually, select a package (or all
+three), set the rollout percentage, and approve the production job. Updates
+to packages already in the feed need a new manifest version when their bytes
+change.
+
+Configure the `extension-production` environment to allow only `master`
+and require the release owner's approval. Set these environment variables
+and secrets for the existing publisher:
+
+| Name | Type | Value |
+|---|---|---|
+| `EXTENSION_PUBLISH_HOST` | Variable | SSH hostname of the publisher |
+| `EXTENSION_PUBLISH_USER` | Variable | Publisher account, normally `manatan-publisher` |
+| `EXTENSION_PUBLISH_SSH_KEY` | Secret | Dedicated SSH deployment key |
+| `EXTENSION_PUBLISH_KNOWN_HOSTS` | Secret | Verified SSH host key in known-hosts format |
+
+Install the reviewed checkout on the signing host at
+`/opt/manatan-flashcards`. Add the deploy key's public half to the publisher
+account's `authorized_keys` with a forced command:
+
+```text
+restrict,command="/opt/manatan-extension-publisher/bin/python /opt/manatan-flashcards/scripts/publish-ci-artifacts.py --keys /etc/manatan/extension-online-keys --out /var/lib/manatan-extension-updates" ssh-ed25519 <deployment-public-key>
+```
+
+The protected job uploads the artifacts through that command and checks that
+the live feed serves the exact published bytes. The publisher keeps its keys
+and persistent metadata directory on the host. The daily timer uses that same
+directory.
