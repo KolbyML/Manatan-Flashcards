@@ -1,0 +1,25 @@
+<div aria-live="polite" hidden style="position:fixed;bottom:8px;right:8px;padding:4px 8px;border-radius:12px;background:rgba(0,0,0,.6);color:#fff;font:12px sans-serif;z-index:9999"></div>
+<script>
+(() => {
+  const badge = document.currentScript.previousElementSibling;
+  const api = window.ManatanSRS?.collection;
+  if (!badge || !api) return;
+  let pending;
+  const update = async () => {
+    try {
+      const count = await api.reviewedToday();
+      badge.textContent = count + ' reviewed today';
+      badge.hidden = false;
+    } catch (_) {
+      // Collection changes supersede the current read. The next refresh can
+      // still display a count without interfering with the card.
+    }
+  };
+  document.addEventListener('srs:collection-changed', () => {
+    clearTimeout(pending);
+    pending = setTimeout(update, 100);
+  });
+  addEventListener('pagehide', () => clearTimeout(pending), {once: true});
+  void update();
+})();
+</script>

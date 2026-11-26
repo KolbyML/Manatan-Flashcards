@@ -26,6 +26,23 @@ per-extension configuration and persisted state.
 The examples demonstrate a dashboard panel, a review counter, a calendar
 heatmap, lifecycle logging, and a command that buries the current card.
 
+### Background reviewer queries
+
+When a reviewer render context includes `supportsCollectionQueries: true`,
+its fragment can use `window.ManatanSRS.collection`. This JavaScript API is
+separate from the WebAssembly interface and loads its data after the card is
+shown.
+
+| Method | Result |
+|---|---|
+| `reviewedToday()` | Answers recorded in the current study day. |
+| `deckCounts()` | Deck inventory and scheduled queue counts before daily limits. |
+| `dueForecast(days)` | Scheduled card counts by study day for 1–90 days. |
+
+Each method returns a promise. Refresh on `srs:collection-changed` and discard
+aborted reads when a card is replaced. The Reviewer Progress extension falls
+back to its legacy count on older hosts.
+
 ## Integrations
 
 Use `net::fetch` for permitted remote URL prefixes. Use `net::serve` and

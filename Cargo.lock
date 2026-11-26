@@ -185,6 +185,7 @@ name = "reviewer-progress"
 version = "0.1.0"
 dependencies = [
  "manatan-flashcards-sdk",
+ "serde_json",
 ]
 
 [[package]]

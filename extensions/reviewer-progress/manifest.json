@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "reviewer-progress",
   "name": "Reviewer Progress",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Shows a small \"N reviewed today\" badge on the card page.",
   "author": "Kolby Moroz Liebl",
   "license": "MIT",

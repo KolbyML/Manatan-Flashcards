@@ -1,6 +1,5 @@
 //! A reviewer-surface extension: shows an unobtrusive "N reviewed today" badge
-//! on the card page. Demonstrates rendering into the reviewer surface from the
-//! generic `collection.review-log` capability.
+//! after the current card has appeared. Older hosts use the original count.
 
 use manatan_flashcards_sdk::{collection, host, Extension};
 
@@ -8,9 +7,14 @@ use manatan_flashcards_sdk::{collection, host, Extension};
 struct ReviewerProgress;
 
 impl Extension for ReviewerProgress {
-    fn render(&mut self, surface: String, _context: String) -> String {
+    fn render(&mut self, surface: String, context: String) -> String {
         if surface != "reviewer" {
             return String::new();
+        }
+        if serde_json::from_str::<serde_json::Value>(&context)
+            .is_ok_and(|context| context["supportsCollectionQueries"] == true)
+        {
+            return include_str!("badge.html").to_owned();
         }
         let now_ms = host::now_millis();
         let count = collection::review_log(now_ms - 86_400_000, now_ms).len();
