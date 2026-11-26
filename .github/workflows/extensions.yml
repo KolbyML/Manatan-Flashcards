@@ -61,52 +61,38 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment: extension-production
+    permissions:
+      contents: write
     concurrency:
       group: extension-production
       cancel-in-progress: false
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: extension-feed
+          path: extension-feed
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: flashcards-extensions
           path: packages
-      - name: Publish the verified build through the Manatan signing host
+      - name: Install publisher dependencies
+        run: |
+          python3 -m venv "$RUNNER_TEMP/extension-publisher"
+          "$RUNNER_TEMP/extension-publisher/bin/python" -m pip install --requirement scripts/extension-signing-requirements.txt
+          echo "$RUNNER_TEMP/extension-publisher/bin" >> "$GITHUB_PATH"
+      - name: Sign feed metadata
         env:
           PACKAGE: ${{ inputs.package }}
           ROLLOUT: ${{ inputs.rollout }}
-          PUBLISH_HOST: ${{ vars.EXTENSION_PUBLISH_HOST }}
-          PUBLISH_USER: ${{ vars.EXTENSION_PUBLISH_USER }}
-          PUBLISH_KEY: ${{ secrets.EXTENSION_PUBLISH_SSH_KEY }}
-          PUBLISH_KNOWN_HOSTS: ${{ secrets.EXTENSION_PUBLISH_KNOWN_HOSTS }}
+          PUBLISHER_PEM: ${{ secrets.EXTENSION_SIGNING_PUBLISHER_PEM }}
+        run: bash scripts/sign-extension-feed.sh extension-feed packages "$PACKAGE" "$ROLLOUT"
+      - name: Publish public feed files
+        working-directory: extension-feed
         run: |
-          if [[ -z "$PUBLISH_HOST" || -z "$PUBLISH_USER" || -z "$PUBLISH_KEY" || -z "$PUBLISH_KNOWN_HOSTS" ]]; then
-            echo "::error::Configure the signing host in the extension-production environment."
-            exit 1
-          fi
-          if [[ ! "$ROLLOUT" =~ ^(0|[1-9][0-9]?|100)$ ]]; then
-            echo "::error::Rollout must be an integer from 0 to 100."
-            exit 1
-          fi
-          case "$PACKAGE" in
-            all) files=(packages/*.mext) ;;
-            reviewer-progress|review-heatmap|anki-connect) files=(packages/"$PACKAGE"-*.mext) ;;
-            *) exit 1 ;;
-          esac
-          ssh_config="$(mktemp -d)"
-          trap 'rm -rf "$ssh_config"' EXIT
-          chmod 700 "$ssh_config"
-          (umask 077; printf '%s\n' "$PUBLISH_KEY" > "$ssh_config/key")
-          printf '%s\n' "$PUBLISH_KNOWN_HOSTS" > "$ssh_config/known_hosts"
-          tar --format=ustar -cf - -C packages "${files[@]#packages/}" | ssh -T \
-            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
-            -o UserKnownHostsFile="$ssh_config/known_hosts" -o ConnectTimeout=15 \
-            -i "$ssh_config/key" -l "$PUBLISH_USER" -- "$PUBLISH_HOST" "publish $ROLLOUT"
-          for file in "${files[@]}"; do
-            hash="$(sha256sum "$file" | cut -d ' ' -f 1)"
-            expected="$hash  $ssh_config/target"
-            curl --fail --silent --show-error --retry 3 \
-              "https://manatan.com/api/srs/extension-updates/targets/$hash.${file##*/}" \
-              --output "$ssh_config/target"
-            echo "$expected" | sha256sum --check --status
-          done
-          curl --fail --silent --show-error --retry 3 --output /dev/null \
-            https://manatan.com/api/srs/extension-updates/metadata/timestamp.json
+          git add -- metadata targets
+          git -c user.name=github-actions -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+            commit -m "Publish Flashcards extension feed" -m "Source: $GITHUB_SHA"
+          git push origin HEAD:refs/heads/extension-feed

@@ -1,98 +1,70 @@
-# Signed extension updates
+# Official Flashcards extension updates
 
-`root.json` is the public trust anchor embedded in Manatan. It contains no
-private keys. Updating a community catalog entry does not grant authority to
-replace an installed extension automatically.
-
-Build first-party packages with `scripts/package-extensions.sh`. Install the
-publisher requirements in an operator virtual environment:
-
-```sh
-python3 -m venv /path/to/publisher-venv
-/path/to/publisher-venv/bin/pip install -r scripts/extension-repository-requirements.txt
-/path/to/publisher-venv/bin/python scripts/extension-repository.py publish \
-  --keys /protected/extension-signing --out /public/extension-repository \
-  --packages target/extension-packages --rollout 10
-```
-
-The existing repository and signing keys must persist between runs. Never
-reinitialize them for each deployment: metadata versions prevent replay.
-`init` is only for a new publisher identity. The first-party identity already
-has its public root checked in here; its private keys must stay outside source
-and public output. Keep at least two of three root keys offline. Routine
-publishing needs only targets, snapshot, and timestamp keys.
-
-Run `publish` at least daily, even without packages, to refresh the seven-day
-snapshot/timestamp expiry. Increase rollout after validation. Packages are
-immutable: changed bytes require a new version. Retain old targets and
-versioned metadata so existing compatible clients can finish their update.
-
-To withdraw a faulty package, use `publish --withdraw id-version.mext`.
-Clients with automatic updates enabled restore their retained previous
-version; paused clients show the withdrawal and await user action. Local
-runtime failures also trigger rollback and quarantine without waiting for a
-publisher withdrawal. User rollback pauses automatic updates.
-
-Use `rotate-root` with the offline root keys to rotate the root trust keys.
-Both the old and new thresholds must sign; retain every numbered root file.
-Move new root keys back offline after rotation. Online role-key rotation is a
-separate root-metadata change and is not performed by this helper.
-
-Deploy only the public `metadata/` and `targets/` directories. Upload immutable
-files first and `timestamp.json` last. Configure the website's read-only
-`MANATAN_EXTENSION_UPDATE_REPOSITORY` mount to serve this directory at
-`/api/srs/extension-updates/`. Do not expose keys, and do not delete historical
-files during a rolling deploy. Publishing this local directory does not deploy
-it. The app will keep working with its bundled/installed code if a feed is
-unavailable or expired.
-
-The host currently supports API/state version 1. State changes must stay
-backward compatible with the retained previous package. A package requiring a
-new host API or irreversible state format needs an app compatibility change;
-it must not silently migrate state and then claim rollback is safe.
-
-`systemd/manatan-extension-metadata.service` and its daily persistent timer
-provide the unattended metadata refresh job for a Linux publisher host. Adjust
-paths for the operator environment, install the pinned virtual environment and
-SDK checkout, create the unprivileged `manatan-publisher` user, grant it write
-access only to the persistent public repository, and read access to the three
-online keys. Keep all root private keys offline. Install/enable the timer via
-the normal deployment process; these templates do not enable a live job.
-Point the website's read-only mount at the same public directory. New package
-publication must run as this same publisher. The CLI takes a repository file
-lock so a release publication and scheduled refresh cannot race their metadata
-counters or temporary files. Keep the repository on a local filesystem that
-supports POSIX file locks.
+The official feed uses one Ed25519 publisher key. A single signature over
+`metadata/releases.json` authenticates the release list and each package's
+SHA-256 and size. The app pins the key in `updates/publisher.pub` and caches
+installed packages on disk. The catalog sequence advances when a release is
+published or withdrawn. The app rejects older catalogs after seeing a newer
+sequence. The catalog has no expiration timer.
 
 ## GitHub Actions
 
-A push to `master` runs **Flashcards extensions**, which tests the workspace
-and uploads all three validated `.mext` files as a workflow artifact. To
-publish, run the workflow from `master` manually, select a package (or all
-three), set the rollout percentage, and approve the production job. Updates
-to packages already in the feed need a new manifest version when their bytes
-change.
+Every push to `master` tests the workspace and builds the three `.mext` files.
+To publish, manually run **Flashcards extensions** from `master`, select one
+package or all three, set the rollout, and approve the production job. The
+`extension-production` environment uses one secret,
+`EXTENSION_SIGNING_PUBLISHER_PEM`: the existing Ed25519 publisher private
+key whose public half is in `updates/publisher.pub`. The job pushes the
+signed catalog and package bytes to `extension-feed` with the workflow token.
 
-Configure the `extension-production` environment to allow only `master`
-and require the release owner's approval. Set these environment variables
-and secrets for the existing publisher:
+Package versions are immutable. Bump the manifest version if package bytes
+change. To withdraw a version, use the same signer with
+`--withdraw extension-version.mext` against the checked-out feed before
+publishing it.
 
-| Name | Type | Value |
-|---|---|---|
-| `EXTENSION_PUBLISH_HOST` | Variable | SSH hostname of the publisher |
-| `EXTENSION_PUBLISH_USER` | Variable | Publisher account, normally `manatan-publisher` |
-| `EXTENSION_PUBLISH_SSH_KEY` | Secret | Dedicated SSH deployment key |
-| `EXTENSION_PUBLISH_KNOWN_HOSTS` | Secret | Verified SSH host key in known-hosts format |
+## Serve the official feed
 
-Install the reviewed checkout on the signing host at
-`/opt/manatan-flashcards`. Add the deploy key's public half to the publisher
-account's `authorized_keys` with a forced command:
+Create the `extension-feed` branch with a public README on initial setup. The
+release workflow writes public metadata and targets there. Get Shared and the
+native updater read those files directly from GitHub's HTTPS static host.
+Preserve the branch's catalog and targets across runs so sequence numbers and
+packages survive. Verify the public catalog and an in-app update before shipping.
 
-```text
-restrict,command="/opt/manatan-extension-publisher/bin/python /opt/manatan-flashcards/scripts/publish-ci-artifacts.py --keys /etc/manatan/extension-online-keys --out /var/lib/manatan-extension-updates" ssh-ed25519 <deployment-public-key>
+An existing website mirror can still serve the same signed files using
+`scripts/sync-extension-feed.py`. Keep any existing legacy TUF endpoint available
+for released clients using it.
+
+## Third-party feeds
+
+A publisher can host their own packages and catalog on any HTTPS static host.
+Create a separate Ed25519 private PEM and a public `.pub` file containing the
+raw 32-byte public key as 64 hexadecimal characters. Keep the private key
+offline or in the publisher's CI secrets. Build the extension's `.mext`
+using the SDK and sign the releases with that key.
+
+```sh
+python3 -m pip install -r scripts/extension-signing-requirements.txt
+python3 scripts/publish-extension-feed.py \
+  --key /private/publisher.pem --publisher-public-key publisher.pub \
+  --publisher-id my-publisher --publisher-name 'My Publisher' \
+  --packages dist/ --out /public/flashcards-feed
 ```
 
-The protected job uploads the artifacts through that command and checks that
-the live feed serves the exact published bytes. The publisher keeps its keys
-and persistent metadata directory on the host. The daily timer uses that same
-directory.
+Serve `metadata/` and `targets/` from the feed's base URL and give users the
+public key through a channel they trust. Keep the output directory across
+releases. Copy packages before exposing the new catalog.
+
+Submit a PR to the [Get Shared catalog](../catalog/README.md) to list an
+extension. Users can install and receive updates through that listing. For
+private or unlisted repositories, users can paste the feed's base URL under
+**Extensions → Advanced → Add repository** and verify the public key before
+browsing. The publisher association is saved when an extension is installed.
+
+## Legacy TUF feeds
+
+Existing TUF feeds use `scripts/extension-repository.py` and the legacy
+`updates/systemd/manatan-extension-metadata.*` examples. Keep any published
+metadata and targets available for clients that still use them. The new
+mirror leaves those files alone. Root keys and legacy online keys are kept
+outside the source and public feed. The official Actions release job signs
+only the new catalog.

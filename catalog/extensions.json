@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "extensions": [
+    {
+      "id": "anki-connect",
+      "name": "AnkiConnect",
+      "description": "Connects Flashcards to tools using the AnkiConnect API.",
+      "sourceUrl": "https://github.com/KolbyML/Manatan-Flashcards/tree/master/extensions/anki-connect",
+      "repository": {
+        "id": "manatan",
+        "name": "Manatan",
+        "metadataUrl": "https://raw.githubusercontent.com/KolbyML/Manatan-Flashcards/extension-feed/metadata/",
+        "targetsUrl": "https://raw.githubusercontent.com/KolbyML/Manatan-Flashcards/extension-feed/targets/",
+        "trustedRoot": {
+          "ed25519": "7bdc704edfe3b92ece6bdf984512e51981af1fa13ad37f38503a94f076a9af6d"
+        }
+      }
+    },
+    {
+      "id": "review-heatmap",
+      "name": "Review Heatmap",
+      "description": "Shows review activity and upcoming due cards in a calendar.",
+      "sourceUrl": "https://github.com/KolbyML/Manatan-Flashcards/tree/master/extensions/review-heatmap",
+      "repository": {
+        "id": "manatan",
+        "name": "Manatan",
+        "metadataUrl": "https://raw.githubusercontent.com/KolbyML/Manatan-Flashcards/extension-feed/metadata/",
+        "targetsUrl": "https://raw.githubusercontent.com/KolbyML/Manatan-Flashcards/extension-feed/targets/",
+        "trustedRoot": {
+          "ed25519": "7bdc704edfe3b92ece6bdf984512e51981af1fa13ad37f38503a94f076a9af6d"
+        }
+      }
+    },
+    {
+      "id": "reviewer-progress",
+      "name": "Reviewer Progress",
+      "description": "Shows how many cards you reviewed today.",
+      "sourceUrl": "https://github.com/KolbyML/Manatan-Flashcards/tree/master/extensions/reviewer-progress",
+      "repository": {
+        "id": "manatan",
+        "name": "Manatan",
+        "metadataUrl": "https://raw.githubusercontent.com/KolbyML/Manatan-Flashcards/extension-feed/metadata/",
+        "targetsUrl": "https://raw.githubusercontent.com/KolbyML/Manatan-Flashcards/extension-feed/targets/",
+        "trustedRoot": {
+          "ed25519": "7bdc704edfe3b92ece6bdf984512e51981af1fa13ad37f38503a94f076a9af6d"
+        }
+      }
+    }
+  ]
+}
